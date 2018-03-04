@@ -25,7 +25,22 @@ module.exports = merge(common, {
 							loader: 'sass-loader'
 						}],
 						
+            },
+            
+            {
+            test: /\.(png|svg|jpg|gif)$/,
+            use: [
+              'file-loader'
+            ]
+        },
+        {
+            test: /\.css$/,
+            use: [{
+                loader: "style-loader" // creates style nodes from JS strings
+            }, {
+                loader: "css-loader" // translates CSS into CommonJS
             }]
+        }]
         },
         
         plugins: [
