@@ -8,8 +8,8 @@ import './assets/flags.min.css'
 
 const flags = require("./assets/blank.gif")
 
-const width = window.innerWidth * 0.7
-const height = window.innerHeight * 0.7
+const width = window.innerWidth
+const height = window.innerHeight
 
 const svg = d3.select('body').append('svg').attrs({
     height,
@@ -21,32 +21,18 @@ fetch("https://raw.githubusercontent.com/DealPete/forceDirected/master/countries
     .then(j=>{
         console.log(j)
         
-        const nodes = [
-            {"id": "Travis", "sex": "M"},
-            {"id": "Rake", "sex": "M"},
-            {"id": "Diana", "sex": "F"},
-            {"id": "Rachel", "sex": "F"},
-            {"id": "Shawn", "sex": "M"},
-            {"id": "Emerald", "sex": "F"}
-        ]
+        const nodes = j.nodes
         
-        const links = [
-            {"source": "Travis", "target": "Rake"},
-            {"source": "Diana", "target": "Rake"},
-            {"source": "Diana", "target": "Rachel"},
-            {"source": "Rachel", "target": "Rake"},
-            {"source": "Rachel", "target": "Shawn"},
-            {"source": "Emerald", "target": "Rachel"}
-        ]
+        const links = j.links
         
         const linkForce =  d3.forceLink(links)
-                        .id((d) =>d.id)
                         
         const sim = d3.forceSimulation()
             .nodes(nodes)
-            .force("charge_force", d3.forceManyBody())
+            .force("charge_force", d3.forceManyBody().strength(-10))
             .force("center_force", d3.forceCenter(width / 2, height / 2))
-            .force("links", linkForce);
+            .force("links", linkForce)
+            .force("collision", d3.forceCollide().radius(16).strength(1.5))
             
         const link = svg.append("g")
             .attrs({"class": "links"})
@@ -54,22 +40,29 @@ fetch("https://raw.githubusercontent.com/DealPete/forceDirected/master/countries
             .data(links)
             .enter()
             .append("line")
-            .attrs({"stroke-width": 2})
+            .attrs({
+                "stroke-width": 2,
+                stroke: "red"
+            })
         
-        const node = svg.append("g")
-            .attrs({"class": "nodes"})
-            .selectAll("circle")
+        const node = d3.select('.flags').selectAll(".flag")
             .data(nodes)
             .enter()
-            .append("circle")
-            .attrs({r: 5, fill: "red"})
+            .append('div')
+            .attrs({
+                "class": d => `flag flag-${d.code}`,
+                alt: d => d.country,
+            })
         
         const tickActions = () => {
-            node
-                .attrs({
-                    cx: d => d.x,
-                    cy: d => d.y 
-                })
+            
+            
+            node.style('transform', d => {
+                const newX = Math.max(0, Math.min((width - 16), d.x - 8))
+                const newY = Math.max(0, Math.min((height - 11), d.y - 6))
+                return`translate(${newX}px, ${newY}px)`
+                
+            })
             link
                 .attrs({
                     x1: d => d.source.x,
@@ -80,14 +73,28 @@ fetch("https://raw.githubusercontent.com/DealPete/forceDirected/master/countries
                 });
         }
         
-        const drag_handler = d3.drag()
-            .on("drag", (d) => {
-                d3.select(this)
-                .attrs({
-                    cx: d.x = d3.event.x,
-                    cy: d.y = d3.event.y  
-                });
-            });
+        function drag_start(d) {
+            if (!d3.event.active) sim.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+        }
+        
+        function drag_drag(d) {
+            d.fx = d3.event.x
+            d.fy = d3.event.y  
+        };
+        
+        function drag_end(d) {
+            if (!d3.event.active) sim.alphaTarget(0);
+            d.fx = null;
+            d.fy = null;
+        }
+        
+        const drag_handler = d3.drag()    
+            .on("start", drag_start)
+            .on("drag", drag_drag)
+            .on("end", drag_end);
+        
                         
         drag_handler(node);
         
