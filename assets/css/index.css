@@ -1,5 +1,6 @@
 body {
-  color: blue; }
+  margin: 0px;
+  overflow: hidden; }
 
 .links line {
   stroke-opacity: 0.6; }
