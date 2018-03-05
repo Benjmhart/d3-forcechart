@@ -1,0 +1,14 @@
+body {
+  color: blue; }
+
+.links line {
+  stroke-opacity: 0.6; }
+
+.nodes circle {
+  stroke-width: 1.5px; }
+
+.flag {
+  width: 10px;
+  height: 6px;
+  position: absolute;
+  background: url(2c960895ba77f525433ea5f9175e42e2.png) no-repeat; }
